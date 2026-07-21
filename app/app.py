@@ -4,6 +4,7 @@ import sys
 import pandas as pd
 from PIL import Image
 from datetime import datetime
+import gc  # Added for memory cleanup
 
 # ---------------------------------------------------------
 # PATH SETUP (Fixes ModuleNotFoundError for utils & predictor)
@@ -122,14 +123,11 @@ else:
         with col1:
             st.image(image, caption="Analyzed Dish", use_container_width=True)
             
-        temp_path = "temp_test_image.jpg"
-        with open(temp_path, "wb") as f:
-            f.write(uploaded_file.getbuffer())
-            
         with col2:
             with st.spinner("Analyzing image features & mapping nutritional metrics..."):
                 try:
-                    results = food_predictor.predict_image(temp_path)
+                    # Pass the image directly or PIL object to predictor safely
+                    results = food_predictor.predict_image(image)
                     top_match = results[0]
                     confidence = top_match["confidence"]
                     
@@ -194,9 +192,9 @@ else:
                             
                 except Exception as e:
                     st.error(f"Prediction failed: {e}")
-            
-        if os.path.exists(temp_path):
-            os.remove(temp_path)
+                finally:
+                    # Clear RAM memory after execution to prevent Render crashes
+                    gc.collect()
 
 # ---------------------------------------------------------
 # DAILY MEAL LOG & EXPORT SECTION
