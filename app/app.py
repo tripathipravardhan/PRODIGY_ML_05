@@ -5,11 +5,17 @@ import pandas as pd
 from PIL import Image
 from datetime import datetime
 
-# Project path
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# ---------------------------------------------------------
+# PATH SETUP (Fixes ModuleNotFoundError for utils & predictor)
+# ---------------------------------------------------------
+APP_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.abspath(os.path.join(APP_DIR, ".."))
 
-if BASE_DIR not in sys.path:
-    sys.path.insert(0, BASE_DIR)
+# Add both root directory and app directory to sys.path
+if ROOT_DIR not in sys.path:
+    sys.path.insert(0, ROOT_DIR)
+if APP_DIR not in sys.path:
+    sys.path.insert(0, APP_DIR)
 
 import predictor
 from utils.nutrition_data import get_nutrition_info, FOOD_NUTRITION
@@ -84,7 +90,10 @@ st.sidebar.write(f"🥑 **Fats:** {total_logged_fats} g")
 # ---------------------------------------------------------
 st.markdown("<div class='main-header'><h1>🥗 NutriVision AI</h1><p style='font-size:1.1rem; color:#888;'>Upload your meal photo to instantly classify dishes, scale portions, and track daily macro intake.</p></div>", unsafe_allow_html=True)
 
-MODEL_PATH = os.path.join(BASE_DIR, "best_finetuned_model_gpu.keras")
+# Look for model in ROOT_DIR first, then APP_DIR
+MODEL_PATH = os.path.join(ROOT_DIR, "best_finetuned_model_gpu.keras")
+if not os.path.exists(MODEL_PATH):
+    MODEL_PATH = os.path.join(APP_DIR, "best_finetuned_model_gpu.keras")
 
 @st.cache_resource
 def load_model(path):
@@ -215,4 +224,3 @@ if len(st.session_state.meal_journal) > 0:
             st.rerun()
 else:
     st.info("No meals logged yet today. Upload a photo above and click 'Log Meal to Daily Journal'.")
-    
