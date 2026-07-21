@@ -5,6 +5,7 @@ import pandas as pd
 from PIL import Image
 from datetime import datetime
 import gc  # Added for memory cleanup
+import requests
 
 # ---------------------------------------------------------
 # PATH SETUP (Fixes ModuleNotFoundError for utils & predictor)
@@ -91,10 +92,26 @@ st.sidebar.write(f"🥑 **Fats:** {total_logged_fats} g")
 # ---------------------------------------------------------
 st.markdown("<div class='main-header'><h1>🥗 NutriVision AI</h1><p style='font-size:1.1rem; color:#888;'>Upload your meal photo to instantly classify dishes, scale portions, and track daily macro intake.</p></div>", unsafe_allow_html=True)
 
-# Look for model in ROOT_DIR first, then APP_DIR
-MODEL_PATH = os.path.join(ROOT_DIR, "best_finetuned_model_gpu.keras")
-if not os.path.exists(MODEL_PATH):
-    MODEL_PATH = os.path.join(APP_DIR, "best_finetuned_model_gpu.keras")
+# ---------------------------------------------------------
+# MODEL DOWNLOAD & LOADING (Fixes Git LFS & missing path errors)
+# ---------------------------------------------------------
+MODEL_FILENAME = "best_finetuned_model_gpu.keras"
+MODEL_PATH = os.path.join(ROOT_DIR, MODEL_FILENAME)
+MODEL_URL = "https://media.githubusercontent.com/media/tripathipravardhan/PRODIGY_ML_05/main/best_finetuned_model_gpu.keras"
+
+def ensure_model_downloaded(target_path):
+    # Check if the file is missing or if it's just a tiny LFS pointer file (< 1 MB)
+    if not os.path.exists(target_path) or os.path.getsize(target_path) < 1_000_000:
+        with st.spinner("⏬ Fetching ML model weights from GitHub (33 MB)..."):
+            response = requests.get(MODEL_URL, stream=True)
+            if response.status_code == 200:
+                with open(target_path, "wb") as f:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        f.write(chunk)
+            else:
+                st.error("Failed to download model file from GitHub LFS.")
+
+ensure_model_downloaded(MODEL_PATH)
 
 @st.cache_resource
 def load_model(path):
@@ -105,7 +122,7 @@ def load_model(path):
 food_predictor = load_model(MODEL_PATH)
 
 if food_predictor is None:
-    st.error(f"Could not find model file at: `{MODEL_PATH}`")
+    st.error(f"Could not load model file at: `{MODEL_PATH}`")
 else:
     # ---------------------------------------------------------
     # CENTERED FILE UPLOADER
@@ -126,7 +143,7 @@ else:
         with col2:
             with st.spinner("Analyzing image features & mapping nutritional metrics..."):
                 try:
-                    # ✅ FIXED: Reset file pointer & pass raw uploaded_file instead of PIL Image
+                    # Reset file pointer and pass raw uploaded_file to predictor safely
                     uploaded_file.seek(0)
                     results = food_predictor.predict_image(uploaded_file)
                     
