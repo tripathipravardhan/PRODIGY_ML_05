@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual Environment
+venv/
+.env
+
+# TensorFlow
+*.h5
+*.keras
+!best_finetuned_model_gpu.keras
+*.ckpt
+
+
+# Dataset
+dataset/food101/
+
+# Outputs
+outputs/
+
+# VS Code
+.vscode/
+
+# Jupyter
+.ipynb_checkpoints/
