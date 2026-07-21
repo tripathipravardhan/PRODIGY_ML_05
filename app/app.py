@@ -126,8 +126,10 @@ else:
         with col2:
             with st.spinner("Analyzing image features & mapping nutritional metrics..."):
                 try:
-                    # Pass the image directly or PIL object to predictor safely
-                    results = food_predictor.predict_image(image)
+                    # ✅ FIXED: Reset file pointer & pass raw uploaded_file instead of PIL Image
+                    uploaded_file.seek(0)
+                    results = food_predictor.predict_image(uploaded_file)
+                    
                     top_match = results[0]
                     confidence = top_match["confidence"]
                     
@@ -193,7 +195,7 @@ else:
                 except Exception as e:
                     st.error(f"Prediction failed: {e}")
                 finally:
-                    # Clear RAM memory after execution to prevent Render crashes
+                    # Clear RAM memory after execution
                     gc.collect()
 
 # ---------------------------------------------------------
