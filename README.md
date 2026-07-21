@@ -332,6 +332,9 @@ https://github.com/tripathipravardhan
 LinkedIn:
 https://www.linkedin.com/in/pravardhan-tripathi-a8a5ab37a
 
+live:
+https://prodigy-ml-05-xd1i.onrender.com
+
 ---
 
 # 🙏 Acknowledgements
